@@ -107,3 +107,56 @@ class MaintenanceReportListCreateAPIView(BaseListCreateAPIView):
 class RepairHistoryListCreateAPIView(BaseListCreateAPIView):
     model = RepairHistory
     serializer_class = RepairHistorySerializer
+
+def collect_all_data():
+    
+    documents = []
+
+    # Campus 데이터
+    campuses = Campus.objects.all()
+    for campus in campuses:
+        serializer = CampusSerializer(campus)
+        documents.append(str(serializer.data))  # JSON 데이터를 문자열로 변환
+
+    # Building 데이터
+    buildings = Building.objects.all()
+    for building in buildings:
+        serializer = BuildingSerializer(building)
+        documents.append(str(serializer.data))
+
+    # Floor 데이터
+    floors = Floor.objects.all()
+    for floor in floors:
+        serializer = FloorSerializer(floor)
+        documents.append(str(serializer.data))
+
+    # Room 데이터
+    rooms = Room.objects.all()
+    for room in rooms:
+        serializer = RoomSerializer(room)
+        documents.append(str(serializer.data))
+
+    # Asset 데이터
+    assets = Asset.objects.all()
+    for asset in assets:
+        serializer = AssetSerializer(asset)
+        documents.append(str(serializer.data))
+
+    # MaintenanceReport 데이터
+    reports = MaintenanceReport.objects.all()
+    for report in reports:
+        serializer = MaintenanceReportSerializer(report)
+        documents.append(str(serializer.data))
+
+    # RepairHistory 데이터
+    histories = RepairHistory.objects.all()
+    for history in histories:
+        serializer = RepairHistorySerializer(history)
+        documents.append(str(serializer.data))
+
+    return documents if documents else ["No data available."]
+
+class InfrastructureDataAPIView(APIView):
+    def get(self, request):
+        documents = collect_all_data()
+        return Response({'documents': documents}, status=status.HTTP_200_OK)

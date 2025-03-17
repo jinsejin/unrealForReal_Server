@@ -3,7 +3,7 @@ from infrastructure.views import (
     CampusListCreateAPIView, CampusDetailAPIView, BuildingListCreateAPIView, BuildingDetailAPIView,
     FloorListCreateAPIView, FloorDetailAPIView, RoomListCreateAPIView, RoomDetailAPIView,
     AssetListCreateAPIView, AssetDetailAPIView, MaintenanceReportListCreateAPIView, MaintenanceReportDetailAPIView,
-    RepairHistoryListCreateAPIView, RepairHistoryDetailAPIView,
+    RepairHistoryListCreateAPIView, RepairHistoryDetailAPIView, InfrastructureDataAPIView
 )
 
 urlpatterns = [
@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/maintenance-report/<int:pk>/', MaintenanceReportDetailAPIView.as_view(), name='maintenance-report-detail'),
     path('api/repair-history/', RepairHistoryListCreateAPIView.as_view(), name='repair-history-list-create'),
     path('api/repair-history/<int:pk>/', RepairHistoryDetailAPIView.as_view(), name='repair-history-detail'),
+    path('data/', InfrastructureDataAPIView.as_view(), name='infrastructure_data'),
 ]
