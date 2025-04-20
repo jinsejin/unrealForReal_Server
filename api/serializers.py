@@ -15,7 +15,7 @@ class DocumentEmbeddingSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = DocumentEmbedding
-        fields = ['id', 'text', 'embedding', 'created_at']  
+        fields = ['id', 'name', 'embedding', 'created_at']  
 
 class RequestChatGPTSerializer(serializers.Serializer):
     text = serializers.CharField(max_length=1000)
