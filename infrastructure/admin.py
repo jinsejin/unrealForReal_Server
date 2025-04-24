@@ -1,71 +1,42 @@
 from django.contrib import admin
-from .models import Campus, Building, Floor, Room, Asset, MaintenanceReport, RepairHistory
-
-# Campus (캠퍼스)
-@admin.register(Campus)
-class CampusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')  # 리스트에 보이는 필드
-    search_fields = ('name',)  # 검색 필드 추가
+from .models import Located, Asset, MaintenanceReport, RepairHistory, SensorData
 
 
-# Building (건물)
-@admin.register(Building)
-class BuildingAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'campus')
-    list_filter = ('campus',)
-    search_fields = ('name', 'campus__name')
+@admin.register(Located)
+class LocatedAdmin(admin.ModelAdmin):
+    list_display = ('campus_name', 'building_name', 'room_name', 'coordinates')
+    search_fields = ('campus_name', 'building_name', 'room_name')
+    list_filter = ('campus_name', 'building_name')
 
 
-# Floor (층)
-@admin.register(Floor)
-class FloorAdmin(admin.ModelAdmin):
-    list_display = ('id', 'number', 'building')
-    list_filter = ('building',)
-    search_fields = ('number', 'building__name')
-
-
-# Room (방/공간)
-@admin.register(Room)
-class RoomAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'floor', 'building_name')
-    list_filter = ('floor__building',)
-    search_fields = ('name', 'floor__number', 'floor__building__name')
-
-    def building_name(self, obj):
-        return obj.floor.building.name  # 건물 이름을 가져오기
-    building_name.admin_order_field = 'floor__building__name'
-    building_name.short_description = '건물 이름'
-
-
-# Asset (사물/설비)
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category', 'room', 'floor_name', 'building_name', 'state')
-    list_filter = ('category', 'state', 'room__floor__building')
-    search_fields = ('name', 'category', 'room__name', 'room__floor__building__name')
-
-    def floor_name(self, obj):
-        return obj.room.floor.number  # 층 번호 가져오기
-    floor_name.admin_order_field = 'room__floor__number'
-    floor_name.short_description = '층 번호'
-
-    def building_name(self, obj):
-        return obj.room.floor.building.name  # 건물 이름 가져오기
-    building_name.admin_order_field = 'room__floor__building__name'
-    building_name.short_description = '건물 이름'
+    list_display = ('name', 'category', 'state', 'building_name', 'room_name', 'install_date')
+    search_fields = ('name', 'asset_id')
+    list_filter = ('category', 'state', 'room__building_name')
+    autocomplete_fields = ['room']
+    readonly_fields = ['building_name', 'room_name']
 
 
-# Maintenance Report (고장 신고)
 @admin.register(MaintenanceReport)
 class MaintenanceReportAdmin(admin.ModelAdmin):
-    list_display = ('id', 'asset', 'user', 'priority', 'is_resolved', 'reported_at')
-    list_filter = ('priority', 'is_resolved', 'asset__room__floor__building')
-    search_fields = ('asset__name', 'user', 'priority', 'asset__room__floor__building__name')
+    list_display = ('asset', 'user', 'priority', 'failure_type', 'is_resolved', 'reported_at', 'building_name')
+    search_fields = ('user', 'description', 'asset__name')
+    list_filter = ('priority', 'failure_type', 'is_resolved', 'reported_at')
+    autocomplete_fields = ['asset']
+    readonly_fields = ['building_name']
 
 
-# Repair History (수리 이력)
 @admin.register(RepairHistory)
 class RepairHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'report', 'repaired_by', 'repaired_at')
-    list_filter = ('repaired_by',)
-    search_fields = ('report__asset__name', 'repaired_by')
+    list_display = ('report', 'repaired_by', 'repaired_at')
+    search_fields = ('repaired_by', 'report__asset__name')
+    readonly_fields = ('repaired_at',)
+    autocomplete_fields = ['report']
+
+
+@admin.register(SensorData)
+class SensorDataAdmin(admin.ModelAdmin):
+    list_display = ('timestamp', 'temperature', 'humidity', 'angle', 'is_door_open')
+    list_filter = ('is_door_open', 'timestamp')
+    readonly_fields = ('timestamp',)

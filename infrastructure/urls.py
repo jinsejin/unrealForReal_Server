@@ -1,18 +1,12 @@
 from django.urls import path, include
 from infrastructure.views import (
-    CampusListCreateAPIView, CampusDetailAPIView, BuildingListCreateAPIView, BuildingDetailAPIView,
-    FloorListCreateAPIView, FloorDetailAPIView, RoomListCreateAPIView, RoomDetailAPIView,
+    RoomListCreateAPIView, RoomDetailAPIView,
     AssetListCreateAPIView, AssetDetailAPIView, MaintenanceReportListCreateAPIView, MaintenanceReportDetailAPIView,
-    RepairHistoryListCreateAPIView, RepairHistoryDetailAPIView, InfrastructureDataAPIView
+    RepairHistoryListCreateAPIView, RepairHistoryDetailAPIView, InfrastructureDataAPIView , SensorDataListAPIView
 )
 
 urlpatterns = [
-    path('api/campus/', CampusListCreateAPIView.as_view(), name='campus-list-create'),
-    path('api/campus/<int:pk>/', CampusDetailAPIView.as_view(), name='campus-detail'),
-    path('api/building/', BuildingListCreateAPIView.as_view(), name='building-list-create'),
-    path('api/building/<int:pk>/', BuildingDetailAPIView.as_view(), name='building-detail'),
-    path('api/floor/', FloorListCreateAPIView.as_view(), name='floor-list-create'),
-    path('api/floor/<int:pk>/', FloorDetailAPIView.as_view(), name='floor-detail'),
+    path('api/sensor/', SensorDataListAPIView.as_view(), name='sensor-data-list'),
     path('api/room/', RoomListCreateAPIView.as_view(), name='room-list-create'),
     path('api/room/<int:pk>/', RoomDetailAPIView.as_view(), name='room-detail'),
     path('api/asset/', AssetListCreateAPIView.as_view(), name='asset-list-create'),

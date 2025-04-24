@@ -18,8 +18,8 @@ from django.contrib import admin
 from django.urls import path , include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('infrastructure/', include('infrastructure.urls')),
-    path('api-auth/', include('rest_framework.urls')),
-    path('api/', include('api.urls')),
+    path('admin/',admin.site.urls),
+    path('infra/',include('infrastructure.urls')),
+    path('api-auth/',include('rest_framework.urls')),
+    path('chatAI/',include('api.urls')),
 ]
