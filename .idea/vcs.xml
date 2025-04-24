@@ -3,6 +3,5 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/django-rest-framework" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/unrealForReal_Server" vcs="Git" />
   </component>
 </project>
