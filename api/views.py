@@ -2,16 +2,17 @@ import openai
 from openai import OpenAI
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import DocumentEmbedding
-from .models import RequestChatGPT
-from .serializers import DocumentEmbeddingSerializer
+from .models import DocumentEmbedding, RequestChatGPT
+from .serializers import DocumentEmbeddingSerializer , RequestChatGPTSerializer
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from rest_framework.exceptions import ParseError
+from rest_framework import status
 import numpy as np
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -22,9 +23,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _save_infrastructure_data(request):
     try:
-        response = requests.get('http://localhost:8000/infrastructure/data/')
-
-        print(response.json())  # 디버깅 출력
+        response = requests.get('http://localhost:8000/infra/data/')
 
         response.raise_for_status()
         documents = response.json().get('documents', [])
@@ -40,22 +39,8 @@ def _save_infrastructure_data(request):
         # 첫 번째 문서를 query로 사용 (필요에 따라 수정)
         query = documents[0] if documents else ""
 
-        # ChatGPT API 호출 (이 부분이 필요하다면 구현해야 함)
-        chat_response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "당신은 유능한 AI 비서입니다."},
-                {"role": "user", "content": query}
-            ]
-        )
-        chat_gpt_request = RequestChatGPT(
-            text=query,
-            response=chat_response.choices[0].message.content
-        )
-        chat_gpt_request.save()
-
         for text in documents:
-            vector = model.encode(text).tolist()  # model이 정의되어 있어야 함
+            vector = model.encode(text).tolist()  # 모델을 사용하여 문서 벡터화
 
             # name 필드 사용
             doc = DocumentEmbedding(name=text, embedding=vector)
@@ -74,7 +59,6 @@ class SaveInfrastructureDataAPIView(APIView):
     def get(self, request):
         return _save_infrastructure_data(request)
 
-
 class ChatWithRagAPIView(APIView):
     """유사한 문서를 기반으로 ChatGPT에게 질문하여 응답 생성 (POST), 쿼리 처리 (GET)"""
 
@@ -86,16 +70,17 @@ class ChatWithRagAPIView(APIView):
 
     def post(self, request):
         try:
+            # 요청 본문을 직접 처리해서 query 추출
+            query = request.body.decode('utf-8').strip()
+
+            if not query:
+                return Response({"error": "질문을 입력하세요."}, status=400)
+
+            # 이후 기존 코드
             save_response = _save_infrastructure_data(request)
             if save_response.status_code != 200:
                 return Response({"error": "문서 저장 실패. RAG 요청을 실행할 수 없습니다.", "details": save_response.data}, status=500)
 
-            query = request.data.get("query")
-            if query is None:
-                try :
-                    query = request.body.decode("utf-8").strip()
-                except :
-                    query = None
             error_response = self._validate_query(query)
             if error_response:
                 return error_response
@@ -120,10 +105,10 @@ class ChatWithRagAPIView(APIView):
             # RAG 프롬프트 생성
             rag_prompt = f""" 
             초기 설정:
-            
+
             문맥:
             {best_doc.name}
-            
+
             질문:
             {query}
 
@@ -141,12 +126,20 @@ class ChatWithRagAPIView(APIView):
 
             chatgpt_response_text = response.choices[0].message.content
 
+            RequestChatGPT.objects.create(
+                query=query,
+                response=chatgpt_response_text,
+                similarity=best_score,
+                created_at=datetime.now(),
+            )
+
             return Response({
                 "query": query,
-                "context": best_doc.name,
+                "response": best_doc.name,
                 "chatgpt_response": chatgpt_response_text,
                 "similarity": float(best_score)
             })
+
         except openai.OpenAIError as e:
             return Response({"error": f"OpenAI API 오류: {str(e)}"}, status=500)
         except Exception as e:
@@ -167,3 +160,16 @@ class ChatWithRagAPIView(APIView):
 
         except Exception as e:
             return Response({"error": f"서버 오류: {str(e)}"}, status=500)
+
+
+class RequestChatGPTListAPIView(APIView):
+    """
+    저장된 ChatGPT 요청 결과 리스트 조회 (최근 순)
+    """
+    def get(self, request):
+        try:
+            requests_qs = RequestChatGPT.objects.all().order_by('-created_at')
+            serializer = RequestChatGPTSerializer(requests_qs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

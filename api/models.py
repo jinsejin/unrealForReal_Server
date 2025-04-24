@@ -19,6 +19,7 @@ class DocumentEmbedding(models.Model):
 class RequestChatGPT(models.Model):
     text = models.TextField()  # 사용자 입력 텍스트
     response = models.TextField()  # GPT-3 응답
+    similarity = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
