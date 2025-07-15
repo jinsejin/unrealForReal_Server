@@ -80,7 +80,9 @@ class SensorData(models.Model):
     temperature = models.FloatField()
     humidity = models.FloatField()
     angle = models.FloatField()
-    is_door_open = models.BooleanField()
+    is_door_open = models.BooleanField(default=False)
+    is_person_there = models.BooleanField(default=False)
+    airconditioner = models.BooleanField(default=False)
 
     timestamp = models.DateTimeField(auto_now_add=True)
 
